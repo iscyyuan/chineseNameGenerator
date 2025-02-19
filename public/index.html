@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Name Generator | 趣味中文名生成器</title>
+    <style>
+        :root {
+            --chinese-red: #D03C27;
+            --chinese-red-hover: #B32213;
+            --light-gray: #F8F9FA;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #FFFFFF;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            color: var(--chinese-red);
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            margin-bottom: 32px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #E5E5E5;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--chinese-red);
+            box-shadow: 0 0 0 3px rgba(208, 60, 39, 0.1);
+        }
+
+        button {
+            background-color: var(--chinese-red);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+            max-width: 300px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        button:hover {
+            background-color: var(--chinese-red-hover);
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 32px 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .result {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .name-card {
+            background-color: var(--light-gray);
+            padding: 24px;
+            margin: 16px 0;
+            border-radius: 12px;
+            border-left: 4px solid var(--chinese-red);
+            transition: all 0.3s ease;
+        }
+
+        .name-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .name-card h3 {
+            font-size: 24px;
+            margin: 0 0 16px 0;
+            color: var(--chinese-red);
+        }
+
+        .name-card p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .label {
+            font-weight: 500;
+            color: #666;
+            margin-right: 8px;
+        }
+
+        .placeholder-text {
+            color: #999;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chinese Name Generator</h1>
+        <div class="subtitle">趣味中文名生成器 | Create Your Unique Chinese Name</div>
+        
+        <div class="input-group">
+            <input type="text" id="englishName" placeholder="Enter your English name | 请输入英文名">
+            <div class="placeholder-text">Example: John, Mary, Robert...</div>
+        </div>
+        <!-- 修改按钮，移除 onclick 属性 -->
+        <button>Generate Names | 生成中文名</button>
+        
+        <!-- 移除底部的内联脚本 -->
+        <script src="js/main.js"></script>
+        <div class="loading-container" id="loading">
+            <div class="loading-animation"></div>
+            <div class="progress-message">正在为您生成独特的中文名 | Generating your unique Chinese names</div>
+            <div class="loading-steps">
+                <div class="loading-step" id="step1">✧ 分析英文名含义...</div>
+                <div class="loading-step" id="step2">✧ 寻找文化映射...</div>
+                <div class="loading-step" id="step3">✧ 创造中文名...</div>
+                <div class="loading-step" id="step4">✧ 生成名字解释...</div>
+            </div>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function generateNames() {
+            const englishName = document.getElementById('englishName').value.trim();
+            if (!englishName) {
+                alert('Please enter your English name | 请输入英文名！');
+                return;
+            }
+        
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            loading.style.display = 'block';
+            result.style.display = 'none';
+        
+            try {
+                const response = await fetch('http://localhost:3000/generate-names', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ englishName })
+                });
+        
+                const data = await response.json();
+                
+                if (data.success) {
+                    const cleanedJson = data.names
+                        .replace(/```json\n/g, '')
+                        .replace(/```/g, '')
+                        .trim();
+                    
+                    const names = JSON.parse(cleanedJson);
+                    result.innerHTML = names.map(name => `
+                        <div class="name-card">
+                            <h3>${name.chinese}</h3>
+                            <p><span class="label">Chinese Meaning | 中文寓意：</span>${name.chineseMeaning}</p>
+                            <p><span class="label">English Meaning | 英文解释：</span>${name.englishMeaning}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    result.innerHTML = `<p style="color: var(--chinese-red);">Generation failed | 生成失败：${data.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                result.innerHTML = `<p style="color: var(--chinese-red);">Server error. Please try again later. | 服务器错误，请稍后再试</p>`;
+            } finally {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
